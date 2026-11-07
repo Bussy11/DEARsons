@@ -4,11 +4,12 @@ import streamlit as st
 
 # ================= CHANGE THESE =================
 SITE_NAME = "Dearson Barbing & Technology"
-CEO_NAME = "A. O.  JUWON"
+CEO_NAME = "A. O JUWON"
 PHONE_1 = "08161999686"
 PHONE_2 = "0811878687"
 WHATSAPP = "08161999686"
 ADMIN_PASSWORD = "Google123"
+NEWS_URL = "https://www.nairaland.com"
 LOCK_ACADEMY = True   # True = admin must approve, False = open to all
 
 CERTS = [
@@ -114,6 +115,12 @@ def wbtn(label, link, alt=False):
         '<a class="%s" href="%s" target="_blank" rel="noopener">'
         '<img src="%s" alt="">%s</a>'
     ) % (cls, html.escape(link), WA_ICON, label)
+
+
+def news_btn():
+    return (
+        '<a class="newsbtn" href="%s" target="_blank" rel="noopener">NEWS</a>'
+    ) % html.escape(NEWS_URL)
 
 
 def call_pill(num, label):
@@ -298,6 +305,13 @@ div.block-container{
   margin:8px 0;font-size:.92rem;box-shadow:0 2px 4px rgba(0,0,0,.2);}
 .wbtn.alt{background:#064e2b;border:2px solid #d4a017;}
 .wbtn img{width:16px;height:16px;}
+.newsbtn{
+  display:flex;align-items:center;justify-content:center;
+  background:#c8102e;color:#fff !important;font-weight:800;
+  font-family:'Montserrat',sans-serif;letter-spacing:1px;
+  text-decoration:none !important;border:2px solid #d4a017;
+  border-radius:10px;padding:8px 6px;margin-top:2px;font-size:.85rem;
+  box-shadow:0 2px 4px rgba(0,0,0,.25);}
 .calls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
 .call{
   flex:1;min-width:130px;display:flex;align-items:center;gap:8px;
@@ -312,8 +326,8 @@ div.block-container{
   width:95px;height:115px;object-fit:cover;border-radius:12px;
   border:4px solid #d4a017;flex:0 0 auto;}
 .cn{
-  font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.1rem;
-  color:#064e2b;}
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.15rem;
+  color:#c8102e;}
 .cr{font-weight:600;color:#333;font-size:.85rem;line-height:1.5;}
 .foot{text-align:center;font-weight:700;color:#064e2b;font-size:.85rem;margin-top:6px;}
 .cnt{text-align:center;font-weight:700;color:#064e2b;font-size:.9rem;margin:4px 0;}
@@ -329,8 +343,8 @@ div.block-container{
 [data-testid="stForm"]{
   border:2px solid #0b7a43;border-radius:12px;background:#fff;}
 [data-testid="stWidgetLabel"] p{font-weight:700;color:#064e2b;}
-div[role="radiogroup"]{flex-wrap:wrap;gap:.2rem .9rem;}
-div[role="radiogroup"] label p{font-weight:700;color:#064e2b;font-size:.9rem;}
+div[role="radiogroup"]{flex-wrap:wrap;gap:.2rem .6rem;}
+div[role="radiogroup"] label p{font-weight:700;color:#064e2b;font-size:.82rem;}
 .stButton button,[data-testid="stFormSubmitButton"] button{
   background:#064e2b;border:2px solid #d4a017;border-radius:10px;width:100%;}
 .stButton button p,[data-testid="stFormSubmitButton"] button p{
@@ -374,8 +388,13 @@ if not user:
             st.rerun()
 else:
     # ================= MEMBERS-ONLY AREA =================
-    page = st.radio("Menu", ["Home", "Services", "Academy"],
-                    horizontal=True, label_visibility="collapsed")
+    # menu row: Home / Services / Academy + red NEWS button beside it
+    menu_col, news_col = st.columns([3.6, 1])
+    with menu_col:
+        page = st.radio("Menu", ["Home", "Services", "Academy"],
+                        horizontal=True, label_visibility="collapsed")
+    with news_col:
+        md(news_btn())
     who = "I'm %s (%s)" % (user["name"], user["phone"])
 
     if page == "Home":
