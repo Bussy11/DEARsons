@@ -499,4 +499,37 @@ else:
 md('<div class="foot">Contact us</div>')
 md('<div class="calls">%s%s</div>' % (
     call_pill(PHONE_1, "Call line 1"), call_pill(PHONE_2, "Call line 2")))
-md(wbtn("WhatsApp Chat",
+md(wbtn("WhatsApp Chat", wa("Hello %s, I need help." % SITE_NAME)))
+md('<div class="foot">&copy; %s</div>' % html.escape(SITE_NAME))
+
+# ================= ADMIN (password protected) =================
+with st.expander("Admin"):
+    pw = st.text_input("Admin password", type="password")
+    if pw and pw == ADMIN_PASSWORD:
+        # ---- certificate permission requests ----
+        st.subheader("Academy certificate requests")
+        acc = read_acc()
+        if not acc:
+            st.write("No requests yet.")
+        for r in acc:
+            st.write("%s | %s | %s" % (
+                r["name"], r["phone"], r["status"].upper()))
+            a1, a2 = st.columns(2)
+            a1.button("Approve", key="ap_" + r["phone"],
+                      on_click=set_status, args=(r["phone"], "approved"))
+            a2.button("Remove", key="rm_" + r["phone"],
+                      on_click=set_status, args=(r["phone"], "removed"))
+
+        # ---- registered users ----
+        st.subheader("Registered users")
+        rows = read_users()
+        st.write("Total: %d" % len(rows))
+        st.dataframe(rows)
+        buf = io.StringIO()
+        writer = csv.DictWriter(buf, fieldnames=FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
+        st.download_button("Download users.csv", buf.getvalue(),
+                           "users.csv", "text/csv")
+    elif pw:
+        st.error("Wrong password.")
