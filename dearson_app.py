@@ -327,7 +327,10 @@ div.block-container{
   border:4px solid #d4a017;flex:0 0 auto;}
 .cn{
   font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.15rem;
-  color:#c8102e;}
+  color:#1647c9;}
+.cc{
+  font-family:'Montserrat',sans-serif;font-weight:800;font-size:.9rem;
+  color:#c8102e;margin-bottom:2px;}
 .cr{font-weight:600;color:#333;font-size:.85rem;line-height:1.5;}
 .foot{text-align:center;font-weight:700;color:#064e2b;font-size:.85rem;margin-top:6px;}
 .cnt{text-align:center;font-weight:700;color:#064e2b;font-size:.9rem;margin:4px 0;}
@@ -403,7 +406,8 @@ else:
         ceo = img_uri("ceo.jpg", "ceo.jpeg", "ceo.png")
         ceo_img = '<img src="%s" alt="CEO">' % ceo if ceo else ""
         md('<div class="card ceo">%s<div><div class="cn">%s</div>'
-           '<div class="cr">Chief Executive Officer, %s.<br>'
+           '<div class="cc">Chief Executive Officer (CEO)</div>'
+           '<div class="cr">%s.<br>'
            'Quality service, honest prices, skills that pay.</div></div></div>'
            % (ceo_img, html.escape(CEO_NAME), html.escape(SITE_NAME)))
         md(wbtn("Chat on WhatsApp",
