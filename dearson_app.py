@@ -13,11 +13,11 @@ from flask import (Flask, request, session, redirect, url_for,
 
 # ---------- SETTINGS: CHANGE THESE ----------
 SITE_NAME = "Dearson Barbing & Technology"
-CEO_NAME = "Mr. Dearson"                 # change to the CEO's name
-PHONE_1 = "08012345678"                  # contact number 1
-PHONE_2 = "09087654321"                  # contact number 2
-WHATSAPP = "2348012345678"               # WhatsApp number, 234 format, no +
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "change-this-password")
+CEO_NAME = "Mr. OLUWABUSAYO JUWON A."                 # change to the CEO's name
+PHONE_1 = "08161999686"                  # contact number 1
+PHONE_2 = "08118786977"                  # contact number 2
+WHATSAPP = "2348161999686"               # WhatsApp number, 234 format, no +
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Google123")
 # --------------------------------------------
 
 BASE = os.path.dirname(os.path.abspath(__file__))
