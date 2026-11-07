@@ -9,6 +9,7 @@ PHONE_1 = "08161999686"
 PHONE_2 = "0811878687"
 WHATSAPP = "08161999686"
 ADMIN_PASSWORD = "Google123"
+LOCK_ACADEMY = True   # True = admin must approve, False = open to all
 
 CERTS = [
     ("CAC", "Corporate Affairs Commission"),
@@ -23,7 +24,9 @@ CERTS = [
 st.set_page_config(page_title=SITE_NAME, page_icon="✂️", layout="centered")
 BASE = os.path.dirname(os.path.abspath(__file__))
 CSV_FILE = os.path.join(BASE, "users.csv")
+ACC_FILE = os.path.join(BASE, "approvals.csv")
 FIELDS = ["name", "address", "phone", "date"]
+ACC_FIELDS = ["phone", "name", "status", "date"]
 
 
 def H(s):
@@ -132,6 +135,7 @@ def certs_table():
     ) % rows
 
 
+# ---------------- registered users (users.csv) ----------------
 def read_users():
     if not os.path.exists(CSV_FILE):
         return []
@@ -153,6 +157,69 @@ def save_user(name, address, phone):
         w.writerows(rows)
 
 
+# ------------- certificate permission (approvals.csv) -------------
+def read_acc():
+    if not os.path.exists(ACC_FILE):
+        return []
+    with open(ACC_FILE, newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def write_acc(rows):
+    with open(ACC_FILE, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=ACC_FIELDS)
+        w.writeheader()
+        w.writerows(rows)
+
+
+def get_status(phone):
+    for r in read_acc():
+        if r["phone"] == phone:
+            return r["status"]
+    return None
+
+
+def request_access(user):
+    rows = read_acc()
+    if not any(r["phone"] == user["phone"] for r in rows):
+        rows.append({
+            "phone": user["phone"],
+            "name": user["name"],
+            "status": "pending",
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        })
+        write_acc(rows)
+
+
+def set_status(phone, status):
+    new = []
+    for r in read_acc():
+        if r["phone"] == phone:
+            if status == "removed":
+                continue
+            r["status"] = status
+        new.append(r)
+    write_acc(new)
+
+
+def locked_box(user):
+    status = get_status(user["phone"])
+    md('<div class="card"><div class="ct">🔒 Academy Certificate is locked</div>'
+       '<div class="cr">Permission from the admin is required to view it.'
+       '</div></div>')
+    if status is None:
+        st.button("Request Permission", key="req",
+                  on_click=request_access, args=(user,))
+    else:
+        st.info("Your request is waiting for admin approval. "
+                "Tap Check Again after the admin approves.")
+        st.button("Check Again", key="chk")
+    msg = ("Hello, I'm %s (%s). Please approve my permission to view "
+           "the Academy Certificate." % (user["name"], user["phone"]))
+    md(wbtn("Tell admin on WhatsApp", wa(msg)))
+
+
+# ---------------- viewer button actions ----------------
 def pick_cert(view):
     st.session_state["cert_view"] = view
     st.session_state["cert_i"] = 0
@@ -382,9 +449,13 @@ else:
         # ---- certificate viewer ----
         md('<div class="sec">Our Certificates</div>')
         b1, b2 = st.columns(2)
-        b1.button("Professional Certificate", key="b_pro",
+        b1.button("Professional", key="b_pro",
                   on_click=pick_cert, args=("pro",))
-        b2.button("Academy Certificate", key="b_acad",
+        if LOCK_ACADEMY:
+            acad_label = "Academy 🔒"
+        else:
+            acad_label = "Academy"
+        b2.button(acad_label, key="b_acad",
                   on_click=pick_cert, args=("academy",))
 
         view = st.session_state.get("cert_view")
@@ -392,10 +463,17 @@ else:
             if view == "pro":
                 title = "Professional Certificate"
                 files = num_files("pro_cert")
+                allowed = True
             else:
                 title = "Academy Certificate"
                 files = num_files("academy_cert")
-            if not files:
+                allowed = True
+                if LOCK_ACADEMY:
+                    allowed = get_status(user["phone"]) == "approved"
+
+            if not allowed:
+                locked_box(user)
+            elif not files:
                 st.info("No %s uploaded yet." % title.lower())
             else:
                 i = st.session_state.get("cert_i", 0)
@@ -421,21 +499,4 @@ else:
 md('<div class="foot">Contact us</div>')
 md('<div class="calls">%s%s</div>' % (
     call_pill(PHONE_1, "Call line 1"), call_pill(PHONE_2, "Call line 2")))
-md(wbtn("WhatsApp Chat", wa("Hello %s, I need help." % SITE_NAME)))
-md('<div class="foot">&copy; %s</div>' % html.escape(SITE_NAME))
-
-# ================= ADMIN (password protected) =================
-with st.expander("Admin"):
-    pw = st.text_input("Admin password", type="password")
-    if pw and pw == ADMIN_PASSWORD:
-        rows = read_users()
-        st.write("Registered users: %d" % len(rows))
-        st.dataframe(rows)
-        buf = io.StringIO()
-        writer = csv.DictWriter(buf, fieldnames=FIELDS)
-        writer.writeheader()
-        writer.writerows(rows)
-        st.download_button("Download users.csv", buf.getvalue(),
-                           "users.csv", "text/csv")
-    elif pw:
-        st.error("Wrong password.")
+md(wbtn("WhatsApp Chat",
