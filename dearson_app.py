@@ -48,7 +48,7 @@ def img_uri(*names):
     return ""
 
 
-def cert_files(prefix):
+def num_files(prefix):
     found = []
     for i in (1, 2, 3):
         for ext in ("jpg", "jpeg", "png"):
@@ -162,85 +162,99 @@ def step_cert(step):
     st.session_state["cert_i"] = st.session_state.get("cert_i", 0) + step
 
 
+def toggle_env():
+    st.session_state["env_open"] = not st.session_state.get("env_open", False)
+    st.session_state["env_i"] = 0
+
+
+def step_env(step):
+    st.session_state["env_i"] = st.session_state.get("env_i", 0) + step
+
+
 # ======================= STYLE =======================
 md("""<style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800;900&display=swap');
+html,body,.stApp{overflow-x:hidden;max-width:100vw;}
 .stApp{background:#e3eee6;font-family:'Poppins',sans-serif;}
 .stApp p,.stApp li,.stApp label,.stApp input{font-family:'Poppins',sans-serif;}
 div.block-container{
-  max-width:720px;margin:3.2rem auto 1.5rem auto;
-  padding:1.4rem 1.1rem 1.6rem 1.1rem !important;
-  background:#fffdf5;border:4px solid #064e2b;border-radius:18px;
-  box-shadow:inset 0 0 0 4px #fffdf5,inset 0 0 0 7px #d4a017,
+  box-sizing:border-box;width:calc(100% - 14px);max-width:720px;
+  margin:2.8rem auto 1rem auto;
+  padding:1rem .8rem 1.2rem .8rem !important;
+  background:#fffdf5;border:4px solid #064e2b;border-radius:16px;
+  box-shadow:inset 0 0 0 3px #fffdf5,inset 0 0 0 6px #d4a017,
   0 6px 18px rgba(6,78,43,.35);}
 .hdr{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  box-sizing:border-box;width:100%;
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
   background:linear-gradient(135deg,#064e2b,#0b7a43);
   border-bottom:5px solid #d4a017;border-radius:12px;
-  padding:12px;margin-bottom:14px;}
+  padding:8px;margin-bottom:12px;}
 .hdr img{
-  width:clamp(72px,24vw,104px);height:clamp(72px,24vw,104px);
-  object-fit:contain;background:#fff;border-radius:12px;
-  padding:4px;flex:none;}
+  width:clamp(52px,18vw,92px);height:clamp(52px,18vw,92px);
+  object-fit:contain;background:#fff;border-radius:10px;
+  padding:3px;flex:0 0 auto;}
 .hn{
-  flex:1;text-align:center;padding:8px 6px;border-radius:12px;
+  flex:1 1 0;min-width:0;text-align:center;padding:6px 4px;
+  border-radius:12px;
   background:linear-gradient(135deg,#f7d96b,#d4a017 55%,#b8860b);
   border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.35);}
 .hn1{
   font-family:'Playfair Display',serif;font-weight:900;
-  font-size:clamp(1.3rem,6.5vw,2.3rem);color:#064e2b;
-  line-height:1;letter-spacing:1px;}
+  font-size:clamp(1.05rem,5.6vw,2.1rem);color:#064e2b;
+  line-height:1;letter-spacing:.5px;}
 .hn2{
   font-family:'Montserrat',sans-serif;font-weight:800;
-  font-size:clamp(.65rem,3.1vw,.95rem);color:#12301f;
-  margin-top:4px;line-height:1.2;}
+  font-size:clamp(.58rem,2.8vw,.9rem);color:#12301f;
+  margin-top:3px;line-height:1.2;}
 .sec{
   font-family:'Montserrat',sans-serif;font-weight:800;color:#064e2b;
-  font-size:1.4rem;border-bottom:3px solid #d4a017;display:inline-block;
+  font-size:1.3rem;border-bottom:3px solid #d4a017;display:inline-block;
   padding-bottom:2px;margin:6px 0 8px 0;}
-.lead{font-weight:600;color:#1d2b22;font-size:1rem;line-height:1.6;}
+.lead{font-weight:600;color:#1d2b22;font-size:.95rem;line-height:1.6;}
 .card{
+  box-sizing:border-box;
   background:#fff;border:2px solid #0b7a43;border-left:8px solid #d4a017;
-  border-radius:12px;padding:12px 14px;margin:12px 0;
+  border-radius:12px;padding:10px 12px;margin:12px 0;
   box-shadow:0 2px 6px rgba(0,0,0,.15);}
 .ct{
-  font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.15rem;
+  font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.1rem;
   color:#064e2b;margin-bottom:4px;}
 .card ul{margin:0 0 6px 0;padding-left:1.1rem;}
-.card li{font-weight:600;color:#1d2b22;font-size:.98rem;line-height:1.7;}
+.card li{font-weight:600;color:#1d2b22;font-size:.92rem;line-height:1.7;}
 .wbtn{
   display:flex;align-items:center;justify-content:center;gap:8px;
   background:#1fa855;color:#fff !important;font-weight:700;
-  text-decoration:none !important;border-radius:10px;padding:11px 14px;
-  margin:8px 0;font-size:.98rem;box-shadow:0 2px 4px rgba(0,0,0,.2);}
+  text-decoration:none !important;border-radius:10px;padding:10px 12px;
+  margin:8px 0;font-size:.92rem;box-shadow:0 2px 4px rgba(0,0,0,.2);}
 .wbtn.alt{background:#064e2b;border:2px solid #d4a017;}
 .wbtn img{width:16px;height:16px;}
 .calls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
 .call{
-  flex:1;min-width:140px;display:flex;align-items:center;gap:8px;
+  flex:1;min-width:130px;display:flex;align-items:center;gap:8px;
   background:#064e2b;border:2px solid #d4a017;border-radius:10px;
   padding:8px 10px;text-decoration:none !important;}
 .call img{width:16px;height:16px;}
 .call small{
   display:block;color:#d9e8dd;font-size:.65rem;font-weight:500;line-height:1.2;}
-.call b{color:#fff;font-size:.95rem;font-weight:700;}
-.ceo{display:flex;gap:12px;align-items:center;}
+.call b{color:#fff;font-size:.92rem;font-weight:700;}
+.ceo{display:flex;gap:10px;align-items:center;}
 .ceo img{
-  width:110px;height:130px;object-fit:cover;border-radius:12px;
-  border:4px solid #d4a017;}
+  width:95px;height:115px;object-fit:cover;border-radius:12px;
+  border:4px solid #d4a017;flex:0 0 auto;}
 .cn{
-  font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.2rem;
+  font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.1rem;
   color:#064e2b;}
-.cr{font-weight:600;color:#333;font-size:.9rem;line-height:1.5;}
+.cr{font-weight:600;color:#333;font-size:.85rem;line-height:1.5;}
 .foot{text-align:center;font-weight:700;color:#064e2b;font-size:.85rem;margin-top:6px;}
 .cnt{text-align:center;font-weight:700;color:#064e2b;font-size:.9rem;margin:4px 0;}
-.tbl{width:100%;border-collapse:collapse;font-size:.85rem;}
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem;}
 .tbl th{
   background:#064e2b;color:#fff;font-family:'Montserrat',sans-serif;
-  font-weight:700;padding:8px;text-align:left;border:1px solid #d4a017;}
-.tbl td{padding:8px;border:1px solid #cfd8cf;font-weight:600;color:#1d2b22;}
+  font-weight:700;padding:6px;text-align:left;border:1px solid #d4a017;}
+.tbl td{padding:6px;border:1px solid #cfd8cf;font-weight:600;color:#1d2b22;}
 .tbl tr:nth-child(even) td{background:#f1f6f2;}
 [data-testid="stHorizontalBlock"]{flex-wrap:nowrap !important;gap:.5rem !important;}
 [data-testid="stHorizontalBlock"]>div{
@@ -248,11 +262,12 @@ div.block-container{
 [data-testid="stForm"]{
   border:2px solid #0b7a43;border-radius:12px;background:#fff;}
 [data-testid="stWidgetLabel"] p{font-weight:700;color:#064e2b;}
-div[role="radiogroup"] label p{font-weight:700;color:#064e2b;}
+div[role="radiogroup"]{flex-wrap:wrap;gap:.2rem .9rem;}
+div[role="radiogroup"] label p{font-weight:700;color:#064e2b;font-size:.9rem;}
 .stButton button,[data-testid="stFormSubmitButton"] button{
   background:#064e2b;border:2px solid #d4a017;border-radius:10px;width:100%;}
 .stButton button p,[data-testid="stFormSubmitButton"] button p{
-  color:#fff !important;font-weight:700;}
+  color:#fff !important;font-weight:700;font-size:.9rem;}
 </style>""")
 
 # ====== HEADER: logo left, gold name plate middle, coat right ======
@@ -314,6 +329,31 @@ else:
 
     elif page == "Services":
         md('<div class="sec">Our Services</div>')
+
+        # ---- view environment ----
+        env_open = st.session_state.get("env_open", False)
+        if env_open:
+            env_label = "Hide Environment"
+        else:
+            env_label = "View Environment"
+        st.button(env_label, key="b_env", on_click=toggle_env)
+        if env_open:
+            files = num_files("environment")
+            if not files:
+                st.info("No environment pictures uploaded yet.")
+            else:
+                i = st.session_state.get("env_i", 0)
+                i = min(max(i, 0), len(files) - 1)
+                st.session_state["env_i"] = i
+                md('<div class="cnt">Our Environment: %d of %d</div>'
+                   % (i + 1, len(files)))
+                st.image(files[i])
+                e1, e2 = st.columns(2)
+                e1.button("◀ Previous", key="env_prev", on_click=step_env,
+                          args=(-1,), disabled=(i == 0))
+                e2.button("Next ▶", key="env_next", on_click=step_env,
+                          args=(1,), disabled=(i >= len(files) - 1))
+
         barb_msg = "Hello, %s. I want to book: Barbing.\nAddress: %s" % (
             who, user["address"])
         md('<div class="card"><div class="ct">Barbing Salon</div><ul>'
@@ -351,10 +391,10 @@ else:
         if view:
             if view == "pro":
                 title = "Professional Certificate"
-                files = cert_files("pro_cert")
+                files = num_files("pro_cert")
             else:
                 title = "Academy Certificate"
-                files = cert_files("academy_cert")
+                files = num_files("academy_cert")
             if not files:
                 st.info("No %s uploaded yet." % title.lower())
             else:
