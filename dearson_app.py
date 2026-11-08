@@ -4,7 +4,7 @@ import streamlit as st
 
 # ================= CHANGE THESE =================
 SITE_NAME = "Dearson Barbing & Technology"
-CEO_NAME = "A.O. JUWON"
+CEO_NAME = "A.O.  JUWON"
 PHONE_1 = "08161999686"
 PHONE_2 = "0811878687"
 WHATSAPP = "08161999686"
