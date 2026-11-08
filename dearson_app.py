@@ -447,14 +447,18 @@ div.block-container{
 [data-testid="stHorizontalBlock"]{flex-wrap:nowrap !important;gap:.5rem !important;}
 [data-testid="stHorizontalBlock"]>div{
   min-width:0 !important;flex:1 1 0 !important;width:auto !important;}
+[data-testid="stHorizontalBlock"]:has(div[role="radiogroup"])>div:first-child{
+  flex:1 1 auto !important;}
+[data-testid="stHorizontalBlock"]:has(div[role="radiogroup"])>div:last-child{
+  flex:0 0 56px !important;width:56px !important;}
 [data-testid="stForm"]{
   border:2px solid #0b7a43;border-radius:12px;background:#fff;}
 [data-testid="stWidgetLabel"] p{font-weight:700;color:#064e2b;}
 div[role="radiogroup"]{flex-wrap:nowrap;gap:.3rem;}
 div[role="radiogroup"] label{
-  margin:0 !important;padding:5px 9px;border:2px solid #d4a017;
+  margin:0 !important;padding:4px 8px;border:2px solid #d4a017;
   border-radius:999px;background:#fff;cursor:pointer;}
-div[role="radiogroup"] label>div:first-child{display:none;}
+div[role="radiogroup"] label>div:not([data-testid="stMarkdownContainer"]){display:none !important;}
 div[role="radiogroup"] label p{
   font-weight:700;color:#064e2b;font-size:.78rem;white-space:nowrap;}
 div[role="radiogroup"] label:has(input:checked){background:#064e2b;}
