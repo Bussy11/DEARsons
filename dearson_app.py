@@ -2,6 +2,11 @@ import os, re, csv, io, html, base64, urllib.parse
 from datetime import datetime
 import streamlit as st
 
+try:  # Pillow ships with Streamlit; used to shrink images so pages load fast
+    from PIL import Image, ImageOps
+except Exception:
+    Image = None
+
 # ================= CHANGE THESE =================
 SITE_NAME = "Dearson Barbing & Technology"
 CEO_NAME = "A .O.    JUWON"
@@ -44,13 +49,27 @@ def img_uri(*names):
     for n in names:
         p = os.path.join(BASE, n)
         if os.path.exists(p):
-            if n.lower().endswith(".png"):
-                mime = "image/png"
-            else:
-                mime = "image/jpeg"
-            with open(p, "rb") as f:
-                data = base64.b64encode(f.read()).decode()
-            return "data:%s;base64,%s" % (mime, data)
+            is_png = n.lower().endswith(".png")
+            mime = "image/png" if is_png else "image/jpeg"
+            data = None
+            if Image is not None:
+                try:
+                    im = ImageOps.exif_transpose(Image.open(p))
+                    cap = 280 if n.lower().startswith("ceo") else 200
+                    im.thumbnail((cap, cap))
+                    out = io.BytesIO()
+                    if is_png:
+                        im.save(out, "PNG", optimize=True)
+                    else:
+                        im.convert("RGB").save(out, "JPEG", quality=85,
+                                               optimize=True)
+                    data = out.getvalue()
+                except Exception:
+                    data = None
+            if data is None:
+                with open(p, "rb") as f:
+                    data = f.read()
+            return "data:%s;base64,%s" % (mime, base64.b64encode(data).decode())
     return ""
 
 
@@ -68,6 +87,15 @@ def num_files(prefix):
 
 @st.cache_data(show_spinner=False)
 def file_bytes(path):
+    if Image is not None:
+        try:
+            im = ImageOps.exif_transpose(Image.open(path))
+            im.thumbnail((1000, 1000))
+            out = io.BytesIO()
+            im.convert("RGB").save(out, "JPEG", quality=85, optimize=True)
+            return out.getvalue()
+        except Exception:
+            pass
     with open(path, "rb") as f:
         return f.read()
 
@@ -261,11 +289,69 @@ def step_env(step):
     st.session_state["env_i"] = st.session_state.get("env_i", 0) + step
 
 
+# Fragments make the picture viewers refresh alone (the whole page does not
+# rerun when you tap Next / Previous). Falls back to normal on old Streamlit.
+_fragment = getattr(st, "fragment", None) or getattr(st, "experimental_fragment", None)
+
+
+def fragment(fn):
+    return _fragment(fn) if _fragment else fn
+
+
+@fragment
+def env_viewer():
+    files = num_files("environment")
+    if not files:
+        st.info("No environment pictures uploaded yet.")
+        return
+    i = st.session_state.get("env_i", 0)
+    i = min(max(i, 0), len(files) - 1)
+    st.session_state["env_i"] = i
+    md('<div class="cnt">Our Environment: %d of %d</div>' % (i + 1, len(files)))
+    st.image(file_bytes(files[i]))
+    e1, e2 = st.columns(2)
+    e1.button("◀ Previous", key="env_prev", on_click=step_env,
+              args=(-1,), disabled=(i == 0))
+    e2.button("Next ▶", key="env_next", on_click=step_env,
+              args=(1,), disabled=(i >= len(files) - 1))
+
+
+@fragment
+def cert_viewer(user, view):
+    if view == "pro":
+        title = "Professional Certificate"
+        files = num_files("pro_cert")
+        allowed = True
+    else:
+        title = "Academy Certificate"
+        files = num_files("academy_cert")
+        allowed = True
+        if LOCK_ACADEMY:
+            allowed = get_status(user["phone"]) == "approved"
+
+    if not allowed:
+        locked_box(user)
+        return
+    if not files:
+        st.info("No %s uploaded yet." % title.lower())
+        return
+    i = st.session_state.get("cert_i", 0)
+    i = min(max(i, 0), len(files) - 1)
+    st.session_state["cert_i"] = i
+    md('<div class="cnt">%s: %d of %d</div>' % (title, i + 1, len(files)))
+    st.image(file_bytes(files[i]))
+    p1, p2 = st.columns(2)
+    p1.button("◀ Previous", key="prev", on_click=step_cert,
+              args=(-1,), disabled=(i == 0))
+    p2.button("Next ▶", key="next", on_click=step_cert,
+              args=(1,), disabled=(i >= len(files) - 1))
+
+
 # ======================= STYLE =======================
 # The three font imports are merged into ONE request (loads faster,
 # looks exactly the same).
 md("""<style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;600;700&family=Playfair+Display:wght@900&display=swap');
 html,body,.stApp{overflow-x:hidden;max-width:100vw;}
 .stApp{background:#e3eee6;font-family:'Poppins',sans-serif;}
 .stApp p,.stApp li,.stApp label,.stApp input{font-family:'Poppins',sans-serif;}
@@ -326,9 +412,9 @@ div.block-container{
 .newsbtn{
   display:flex;align-items:center;justify-content:center;
   background:#c8102e;color:#fff !important;font-weight:800;
-  font-family:'Montserrat',sans-serif;letter-spacing:1px;
-  text-decoration:none !important;border:2px solid #d4a017;
-  border-radius:999px;padding:7px 4px;margin-top:2px;font-size:.75rem;
+  font-family:'Montserrat',sans-serif;letter-spacing:.5px;
+  text-decoration:none !important;border:1.5px solid #d4a017;
+  border-radius:999px;padding:3px 2px;margin-top:4px;font-size:.62rem;
   box-shadow:0 2px 4px rgba(0,0,0,.25);}
 .calls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
 .call{
@@ -417,7 +503,7 @@ if not user:
 else:
     # ================= MEMBERS-ONLY AREA =================
     # menu row: Home / Services / Academy + red NEWS button beside it
-    menu_col, news_col = st.columns([4.3, 1])
+    menu_col, news_col = st.columns([5.4, 1])
     with menu_col:
         page = st.radio("Menu", ["Home", "Services", "Academy"],
                         horizontal=True, label_visibility="collapsed")
@@ -453,21 +539,7 @@ else:
             env_label = "View Environment"
         st.button(env_label, key="b_env", on_click=toggle_env)
         if env_open:
-            files = num_files("environment")
-            if not files:
-                st.info("No environment pictures uploaded yet.")
-            else:
-                i = st.session_state.get("env_i", 0)
-                i = min(max(i, 0), len(files) - 1)
-                st.session_state["env_i"] = i
-                md('<div class="cnt">Our Environment: %d of %d</div>'
-                   % (i + 1, len(files)))
-                st.image(file_bytes(files[i]))
-                e1, e2 = st.columns(2)
-                e1.button("◀ Previous", key="env_prev", on_click=step_env,
-                          args=(-1,), disabled=(i == 0))
-                e2.button("Next ▶", key="env_next", on_click=step_env,
-                          args=(1,), disabled=(i >= len(files) - 1))
+            env_viewer()
 
         barb_msg = "Hello, %s. I want to book: Barbing.\nAddress: %s" % (
             who, user["address"])
@@ -508,33 +580,7 @@ else:
 
         view = st.session_state.get("cert_view")
         if view:
-            if view == "pro":
-                title = "Professional Certificate"
-                files = num_files("pro_cert")
-                allowed = True
-            else:
-                title = "Academy Certificate"
-                files = num_files("academy_cert")
-                allowed = True
-                if LOCK_ACADEMY:
-                    allowed = get_status(user["phone"]) == "approved"
-
-            if not allowed:
-                locked_box(user)
-            elif not files:
-                st.info("No %s uploaded yet." % title.lower())
-            else:
-                i = st.session_state.get("cert_i", 0)
-                i = min(max(i, 0), len(files) - 1)
-                st.session_state["cert_i"] = i
-                md('<div class="cnt">%s: %d of %d</div>'
-                   % (title, i + 1, len(files)))
-                st.image(file_bytes(files[i]))
-                p1, p2 = st.columns(2)
-                p1.button("◀ Previous", key="prev", on_click=step_cert,
-                          args=(-1,), disabled=(i == 0))
-                p2.button("Next ▶", key="next", on_click=step_cert,
-                          args=(1,), disabled=(i >= len(files) - 1))
+            cert_viewer(user, view)
 
         # ---- certificates acquired table ----
         md(certs_table())
