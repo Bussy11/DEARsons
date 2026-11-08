@@ -454,15 +454,8 @@ div.block-container{
 [data-testid="stForm"]{
   border:2px solid #0b7a43;border-radius:12px;background:#fff;}
 [data-testid="stWidgetLabel"] p{font-weight:700;color:#064e2b;}
-div[role="radiogroup"]{flex-wrap:nowrap;gap:.3rem;}
-div[role="radiogroup"] label{
-  margin:0 !important;padding:4px 8px;border:2px solid #d4a017;
-  border-radius:999px;background:#fff;cursor:pointer;}
-div[role="radiogroup"] label>div:not([data-testid="stMarkdownContainer"]){display:none !important;}
-div[role="radiogroup"] label p{
-  font-weight:700;color:#064e2b;font-size:.78rem;white-space:nowrap;}
-div[role="radiogroup"] label:has(input:checked){background:#064e2b;}
-div[role="radiogroup"] label:has(input:checked) p{color:#f2cf66;}
+div[role="radiogroup"]{flex-wrap:wrap;gap:.2rem .6rem;}
+div[role="radiogroup"] label p{font-weight:700;color:#064e2b;font-size:.82rem;}
 .stButton button,[data-testid="stFormSubmitButton"] button{
   background:#064e2b;border:2px solid #d4a017;border-radius:10px;width:100%;}
 .stButton button p,[data-testid="stFormSubmitButton"] button p{
