@@ -278,27 +278,29 @@ div.block-container{
   0 6px 18px rgba(6,78,43,.35);}
 .hdr{
   box-sizing:border-box;width:100%;
-  display:flex;align-items:center;justify-content:space-between;gap:6px;
-  background:linear-gradient(135deg,#064e2b,#0b7a43);
-  border-bottom:5px solid #d4a017;border-radius:12px;
-  padding:8px;margin-bottom:12px;}
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:linear-gradient(135deg,#043d21,#075f33 60%,#043d21);
+  border-bottom:3px solid #d4a017;border-radius:12px;
+  padding:8px 10px;margin-bottom:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,.25);}
 .hdr img{
-  width:clamp(52px,18vw,92px);height:clamp(52px,18vw,92px);
-  object-fit:contain;background:#fff;border-radius:10px;
-  padding:3px;flex:0 0 auto;}
+  width:clamp(44px,13vw,62px);height:clamp(44px,13vw,62px);
+  object-fit:contain;background:#fff;border-radius:50%;
+  border:2px solid #d4a017;padding:3px;flex:0 0 auto;
+  box-sizing:border-box;box-shadow:0 0 0 2px rgba(255,255,255,.15);}
 .hn{
-  flex:1 1 0;min-width:0;text-align:center;padding:6px 4px;
-  border-radius:12px;
-  background:linear-gradient(135deg,#f7d96b,#d4a017 55%,#b8860b);
-  border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.35);}
+  flex:1 1 0;min-width:0;text-align:center;padding:0 2px;
+  background:none;border:none;box-shadow:none;}
 .hn1{
   font-family:'Playfair Display',serif;font-weight:900;
-  font-size:clamp(1.05rem,5.6vw,2.1rem);color:#064e2b;
-  line-height:1;letter-spacing:.5px;}
+  font-size:clamp(1.15rem,6.4vw,1.8rem);color:#f2cf66;
+  line-height:1.05;letter-spacing:1px;}
 .hn2{
-  font-family:'Montserrat',sans-serif;font-weight:800;
-  font-size:clamp(.58rem,2.8vw,.9rem);color:#12301f;
-  margin-top:3px;line-height:1.2;}
+  font-family:'Montserrat',sans-serif;font-weight:700;
+  font-size:clamp(.5rem,2.5vw,.7rem);color:#e8f1ea;
+  letter-spacing:1.4px;text-transform:uppercase;line-height:1.25;
+  margin-top:4px;padding-top:4px;
+  border-top:1px solid rgba(212,160,23,.75);}
 .sec{
   font-family:'Montserrat',sans-serif;font-weight:800;color:#064e2b;
   font-size:1.3rem;border-bottom:3px solid #d4a017;display:inline-block;
@@ -326,7 +328,7 @@ div.block-container{
   background:#c8102e;color:#fff !important;font-weight:800;
   font-family:'Montserrat',sans-serif;letter-spacing:1px;
   text-decoration:none !important;border:2px solid #d4a017;
-  border-radius:10px;padding:8px 6px;margin-top:2px;font-size:.85rem;
+  border-radius:999px;padding:7px 4px;margin-top:2px;font-size:.75rem;
   box-shadow:0 2px 4px rgba(0,0,0,.25);}
 .calls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
 .call{
@@ -362,8 +364,15 @@ div.block-container{
 [data-testid="stForm"]{
   border:2px solid #0b7a43;border-radius:12px;background:#fff;}
 [data-testid="stWidgetLabel"] p{font-weight:700;color:#064e2b;}
-div[role="radiogroup"]{flex-wrap:wrap;gap:.2rem .6rem;}
-div[role="radiogroup"] label p{font-weight:700;color:#064e2b;font-size:.82rem;}
+div[role="radiogroup"]{flex-wrap:nowrap;gap:.3rem;}
+div[role="radiogroup"] label{
+  margin:0 !important;padding:5px 9px;border:2px solid #d4a017;
+  border-radius:999px;background:#fff;cursor:pointer;}
+div[role="radiogroup"] label>div:first-child{display:none;}
+div[role="radiogroup"] label p{
+  font-weight:700;color:#064e2b;font-size:.78rem;white-space:nowrap;}
+div[role="radiogroup"] label:has(input:checked){background:#064e2b;}
+div[role="radiogroup"] label:has(input:checked) p{color:#f2cf66;}
 .stButton button,[data-testid="stFormSubmitButton"] button{
   background:#064e2b;border:2px solid #d4a017;border-radius:10px;width:100%;}
 .stButton button p,[data-testid="stFormSubmitButton"] button p{
@@ -408,7 +417,7 @@ if not user:
 else:
     # ================= MEMBERS-ONLY AREA =================
     # menu row: Home / Services / Academy + red NEWS button beside it
-    menu_col, news_col = st.columns([3.6, 1])
+    menu_col, news_col = st.columns([4.3, 1])
     with menu_col:
         page = st.radio("Menu", ["Home", "Services", "Academy"],
                         horizontal=True, label_visibility="collapsed")
