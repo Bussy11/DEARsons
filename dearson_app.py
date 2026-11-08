@@ -38,6 +38,8 @@ def md(s):
     st.markdown(H(s), unsafe_allow_html=True)
 
 
+# ---------------- cached helpers (speed) ----------------
+@st.cache_data(show_spinner=False)
 def img_uri(*names):
     for n in names:
         p = os.path.join(BASE, n)
@@ -52,6 +54,7 @@ def img_uri(*names):
     return ""
 
 
+@st.cache_data(show_spinner=False, ttl=60)
 def num_files(prefix):
     found = []
     for i in (1, 2, 3):
@@ -63,6 +66,13 @@ def num_files(prefix):
     return found
 
 
+@st.cache_data(show_spinner=False)
+def file_bytes(path):
+    with open(path, "rb") as f:
+        return f.read()
+
+
+@st.cache_data(show_spinner=False)
 def svg_uri(svg):
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
@@ -143,6 +153,9 @@ def certs_table():
 
 
 # ---------------- registered users (users.csv) ----------------
+# Cached for speed. The cache is cleared whenever the file is written,
+# and ttl=60 is a safety net if the file is changed from outside.
+@st.cache_data(show_spinner=False, ttl=60)
 def read_users():
     if not os.path.exists(CSV_FILE):
         return []
@@ -151,7 +164,7 @@ def read_users():
 
 
 def save_user(name, address, phone):
-    rows = [r for r in read_users() if r["phone"] != phone]
+    rows = [r for r in read_users() if r.get("phone") != phone]
     rows.append({
         "name": name,
         "address": address,
@@ -159,12 +172,14 @@ def save_user(name, address, phone):
         "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
     })
     with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=FIELDS)
+        w = csv.DictWriter(f, fieldnames=FIELDS, extrasaction="ignore")
         w.writeheader()
         w.writerows(rows)
+    read_users.clear()
 
 
 # ------------- certificate permission (approvals.csv) -------------
+@st.cache_data(show_spinner=False, ttl=60)
 def read_acc():
     if not os.path.exists(ACC_FILE):
         return []
@@ -174,21 +189,22 @@ def read_acc():
 
 def write_acc(rows):
     with open(ACC_FILE, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=ACC_FIELDS)
+        w = csv.DictWriter(f, fieldnames=ACC_FIELDS, extrasaction="ignore")
         w.writeheader()
         w.writerows(rows)
+    read_acc.clear()
 
 
 def get_status(phone):
     for r in read_acc():
-        if r["phone"] == phone:
-            return r["status"]
+        if r.get("phone") == phone:
+            return r.get("status")
     return None
 
 
 def request_access(user):
     rows = read_acc()
-    if not any(r["phone"] == user["phone"] for r in rows):
+    if not any(r.get("phone") == user["phone"] for r in rows):
         rows.append({
             "phone": user["phone"],
             "name": user["name"],
@@ -201,7 +217,7 @@ def request_access(user):
 def set_status(phone, status):
     new = []
     for r in read_acc():
-        if r["phone"] == phone:
+        if r.get("phone") == phone:
             if status == "removed":
                 continue
             r["status"] = status
@@ -246,10 +262,10 @@ def step_env(step):
 
 
 # ======================= STYLE =======================
+# The three font imports are merged into ONE request (loads faster,
+# looks exactly the same).
 md("""<style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@800;900&display=swap');
 html,body,.stApp{overflow-x:hidden;max-width:100vw;}
 .stApp{background:#e3eee6;font-family:'Poppins',sans-serif;}
 .stApp p,.stApp li,.stApp label,.stApp input{font-family:'Poppins',sans-serif;}
@@ -437,7 +453,7 @@ else:
                 st.session_state["env_i"] = i
                 md('<div class="cnt">Our Environment: %d of %d</div>'
                    % (i + 1, len(files)))
-                st.image(files[i])
+                st.image(file_bytes(files[i]))
                 e1, e2 = st.columns(2)
                 e1.button("◀ Previous", key="env_prev", on_click=step_env,
                           args=(-1,), disabled=(i == 0))
@@ -504,7 +520,7 @@ else:
                 st.session_state["cert_i"] = i
                 md('<div class="cnt">%s: %d of %d</div>'
                    % (title, i + 1, len(files)))
-                st.image(files[i])
+                st.image(file_bytes(files[i]))
                 p1, p2 = st.columns(2)
                 p1.button("◀ Previous", key="prev", on_click=step_cert,
                           args=(-1,), disabled=(i == 0))
@@ -535,13 +551,15 @@ with st.expander("Admin"):
         if not acc:
             st.write("No requests yet.")
         for r in acc:
-            st.write("%s | %s | %s" % (
-                r["name"], r["phone"], r["status"].upper()))
+            # st.text shows names exactly as typed (no markdown/HTML injection)
+            st.text("%s | %s | %s" % (
+                r.get("name", ""), r.get("phone", ""),
+                str(r.get("status", "")).upper()))
             a1, a2 = st.columns(2)
-            a1.button("Approve", key="ap_" + r["phone"],
-                      on_click=set_status, args=(r["phone"], "approved"))
-            a2.button("Remove", key="rm_" + r["phone"],
-                      on_click=set_status, args=(r["phone"], "removed"))
+            a1.button("Approve", key="ap_" + r.get("phone", ""),
+                      on_click=set_status, args=(r.get("phone", ""), "approved"))
+            a2.button("Remove", key="rm_" + r.get("phone", ""),
+                      on_click=set_status, args=(r.get("phone", ""), "removed"))
 
         # ---- registered users ----
         st.subheader("Registered users")
@@ -549,7 +567,7 @@ with st.expander("Admin"):
         st.write("Total: %d" % len(rows))
         st.dataframe(rows)
         buf = io.StringIO()
-        writer = csv.DictWriter(buf, fieldnames=FIELDS)
+        writer = csv.DictWriter(buf, fieldnames=FIELDS, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
         st.download_button("Download users.csv", buf.getvalue(),
